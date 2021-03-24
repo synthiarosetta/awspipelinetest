@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  Stage:
+    Type: String
+  notifyVisibilityTimeout:
+    Type: String
+
+Description: "Stack for SNS & SQS services"
+Resources:
+
+ #1 Creation of Notify Topic & Queue
+    retaillNotifyTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: 'retail-notify-topic'
+        
+    retailNotifyQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: 'retail-notify-queue'
+        DelaySeconds: "0"
+        MaximumMessageSize: "262144"
+        MessageRetentionPeriod: "345600"
+        ReceiveMessageWaitTimeSeconds: "0"
+        VisibilityTimeout: !Ref notifyVisibilityTimeout
+        RedrivePolicy:  
+          deadLetterTargetArn: !GetAtt  
+              - notifydlqueue 
+              - Arn 
+          maxReceiveCount: 1
+          
+    retailNotifydlQueue: 
+      Type: AWS::SQS::Queue 
+      Properties: 
+        QueueName: 'retail-notify-dl-queue'
+        
+    retailNotifyQueuePolicy:
+      Type: "AWS::SQS::QueuePolicy"
+      Properties:
+        Queues: 
+            - Ref: 'retailNotifyQueue'
+        PolicyDocument:
+          Version: "2012-10-17"
+          Id: retailNotifyQueuePolicy
+          Statement:
+          - Sid: Allow-User-SendMessage
+            Effect: Allow
+            Principal:
+              AWS: "*" 
+            Resource: !GetAtt [retailNotifyQueue, Arn]
+            Action:
+              - "SQS:SendMessage"
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref retaillNotifyTopic
+                
+    retailNotifySubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref retaillNotifyTopic
+        Endpoint: !GetAtt 
+            - retailNotifyQueue
+            - Arn
+        Protocol: "sqs"
+
+Outputs:
+#1 Notify Topic & Queue
+  RetailNotifyTopicARN: 
+    Description: SNS Topic ARN
+    Value: !Ref retaillNotifyTopic
+    Export:
+      Name: RetailNotifyTopicARN
+  
+  RetailNotifyTopicName: 
+    Description: SNS Topic Name
+    Value: !GetAtt  
+            - retaillNotifyTopic
+            - TopicName
+    Export:
+      Name: RetailNotifyTopicName
+
+  RetailNotifyQueueARN:
+    Description: SNS Queue ARN
+    Value: !GetAtt 
+            - retailNotifyQueue
+            - Arn
+    Export:
+      Name: RetailNotifyQueueARN
+
+  RetailNotifyQueueName:
+    Description: SNS Queue Name
+    Value: !Ref retailNotifyQueue
+    Export:
+      Name: RetailNotifyQueueName

@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  retailEventKinesisShardCount:
+    Type: String
+  retailTelemetryKinesisShardCount:
+    Type: String
+
+Description: "kinesis stream Stack"
+
+Resources:
+
+  retailEventKinesisStream:
+     Type: 'AWS::Kinesis::Stream'
+     Properties:
+       Name: !Sub retail-event-stream
+       ShardCount: !Ref retailEventKinesisShardCount
+
+  retailTelemetryKinesisStream:
+     Type: 'AWS::Kinesis::Stream'
+     Properties:
+       Name: !Sub retail-telemetry-stream
+       ShardCount: !Ref retailTelemetryKinesisShardCount
+
+Outputs:
+
+  RetailEventKinesisStreamName:
+    Description: 'Name of Kinesis Stream'
+    Value: !Ref retailEventKinesisStream
+    Export:
+      Name: RetailEventKinesisStreamName
+
+  RetailEventKinesisStreamARN:
+    Description: 'ARN of Kinesis Stream'
+    Value: !GetAtt 
+            - retailEventKinesisStream
+            - Arn
+    Export:
+      Name: RetailEventKinesisStreamARN
+
+  RetailTelemetryKinesisStreamName:
+    Description: 'Name of Kinesis Stream'
+    Value: !Ref retailTelemetryKinesisStream
+    Export:
+      Name: RetailTelemetryKinesisStreamName
+
+  RetailTelemetryKinesisStreamARN:
+    Description: 'ARN of Kinesis Stream'
+    Value: !GetAtt 
+            - retailTelemetryKinesisStream
+            - Arn
+    Export:
+      Name: RetailTelemetryKinesisStreamARN
+
+#aws cloudformation create-stack --stack-name Kineses-sqt --template-body file://Kineses.yaml --parameters ParameterKey=Stage,ParameterValue=sqt --profile mywater --Region eu-west-1

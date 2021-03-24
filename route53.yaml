@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Route53 Stack"
+Parameters:
+  Name:
+    Type: String
+Resources:
+  route53: 
+    Type: AWS::Route53::HostedZone
+    Properties: 
+      HostedZoneConfig: 
+        Comment: Managed by Cloud Formation
+      Name: !Sub ${Name}
+
+
+Outputs:
+  Route53Record:
+    Description: 'Route53 Record'
+    Value: !Ref route53
+    Export:
+      Name: Route53Record
+  
+  Route53Name:
+    Description: 'Route53 Name'
+    Value: !Sub ${Name}
+    Export:
+      Name: Route53Name

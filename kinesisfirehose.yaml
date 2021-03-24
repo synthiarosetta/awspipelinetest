@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for Firehose DeliveryStream S3 Destination.
+Parameters:
+  Stage:
+    Type: String
+  retailEventIntervalInSeconds:
+    Type: String
+  retailEventSizeInMBs:
+    Type: String
+  retailTelemetryIntervalInSeconds:
+    Type: String
+  retailTelemetrySizeInMBs:
+    Type: String
+
+Resources:
+
+  retailEventFHStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub retail-event-fh
+      ExtendedS3DestinationConfiguration:
+        BucketARN: 
+            Fn::ImportValue:
+               Fn::Sub: "RetailRouterEventBucketARN"
+        BufferingHints:
+          IntervalInSeconds: !Ref retailEventIntervalInSeconds
+          SizeInMBs: !Ref retailEventSizeInMBs
+        CompressionFormat: GZIP
+        RoleARN:
+            Fn::ImportValue:
+               Fn::Sub: "RetailFHStreamRoleARN"
+        CloudWatchLoggingOptions: 
+            Enabled: true
+            LogGroupName: !Sub "/aws/kinesisfirehose/retail-event-fh-${Stage}"
+            LogStreamName: "S3Delivery"
+        ProcessingConfiguration:
+          Enabled: 'false'
+        S3BackupMode: "Disabled"
+
+  retailTelemetryFHStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub retail-telemetry-fh
+      ExtendedS3DestinationConfiguration:
+        BucketARN: 
+            Fn::ImportValue:
+               Fn::Sub: "RetailTelemetryBucketARN"
+        BufferingHints:
+          IntervalInSeconds: !Ref retailTelemetryIntervalInSeconds
+          SizeInMBs: !Ref retailTelemetrySizeInMBs
+        CompressionFormat: GZIP
+        RoleARN:
+            Fn::ImportValue:
+               Fn::Sub: "RetailFHStreamRoleARN"
+        CloudWatchLoggingOptions: 
+            Enabled: true
+            LogGroupName: !Sub "/aws/kinesisfirehose/retail-telemetry-fh-${Stage}"
+            LogStreamName: "S3Delivery"
+        ProcessingConfiguration:
+          Enabled: 'false'
+        S3BackupMode: "Disabled"
+
+  
+Outputs:
+
+  RetailEventFHStreamARN:
+    Description: 'ARN of KinesisFireHose'
+    Value: !GetAtt 
+            - retailEventFHStream
+            - Arn
+    Export:
+      Name: RetailEventFHStreamARN
+      
+  RetailEventFHStreamName:
+    Description: 'Name of KinesisFireHose'
+    Value: !Ref retailEventFHStream
+    Export:
+      Name: RetailEventFHStreamName
+
+   RetailTelemetryFHStreamARN:
+    Description: 'ARN of KinesisFireHose'
+    Value: !GetAtt 
+            - retailTelemetryFHStream
+            - Arn
+    Export:
+      Name: RetailTelemetryFHStreamARN
+      
+  RetailTelemetryFHStreamName:
+    Description: 'Name of KinesisFireHose'
+    Value: !Ref retailTelemetryFHStream
+    Export:
+      Name: RetailTelemetryFHStreamName
+ 
