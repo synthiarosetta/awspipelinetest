@@ -1,0 +1,42 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "start the build"
+  pre_build:
+    commands:
+      - echo "prebuild"
+  build:
+    commands:
+      - cd $CODEBUILD_SRC_DIR && ls -l
+      - cd $CODEBUILD_SRC_DIR_foundationconfig && ls -l
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template iam.yaml --s3-bucket iambucket-testing --output-template iam-export.json
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template s3.yaml --s3-bucket s3bucket-testing-1 --output-template s3-export.json
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template kinesis.yaml --s3-bucket kinesisbucket-testing --output-template kinesis-export.json
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template kinesisfirehose.yaml --s3-bucket kinesisfirehosebucket-testing --output-template kinesisfirehose-export.json
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template dynamodb.yaml --s3-bucket dynamodbbucket-testing --output-template dynamodb-export.json
+      - cd $CODEBUILD_SRC_DIR && aws cloudformation package --template sqssns.yaml --s3-bucket sqssnsbucket-testing --output-template sqssns-export.json
+
+artifacts:
+  secondary-artifacts:
+    SourceFoundationArtifactOut:
+      base-directory: $CODEBUILD_SRC_DIR
+      discard-paths: yes
+      files:
+          - iam-export.json
+          - s3-export.json
+          - kinesis-export.json
+          - kinesisfirehose-export.json
+          - dynamodb-export.json
+          - dynamodb1-export.json
+          - sqssns-export.json
+    SourceConfigArtifactOut:
+      base-directory: $CODEBUILD_SRC_DIR_SourceConfigArtifact
+      discard-paths: yes
+      files:
+        - common-config.json
+        - kinesis-config.json
+        - kinesisfirehose-config.json
+        - dynamodb-config.json
+        - sqssns-config.json
